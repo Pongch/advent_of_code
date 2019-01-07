@@ -4,19 +4,42 @@ defmodule Daytwo do
   """
   
   def part_one(file) do
-    #do things
     Daytwo.parse(file)
     |> Enum.reduce(%{accu_twice: 0, accu_thrice: 0 }, &(Daytwo.scan_string &1, &2))
     |> Daytwo.calculate()
   end
 
+  def part_two(file) do
+    Daytwo.parse(file)
+    |> Daytwo.find_box
+  end
+
+  def find_box(strings) do
+    {box_one, box_two} = Enum.reduce_while(strings, [], fn x, acc -> 
+      box_found = do_find_box(x, acc)
+      case box_found do
+        nil -> {:cont, [x | acc]}
+        found -> {:halt, {found, x}}
+      end
+    end)
+    String.myers_difference(box_one, box_two) |> Keyword.get_values(:eq) |> Enum.join
+    
+  end
+
+  def do_find_box(line, accu) do
+    found = Enum.find(accu, fn x -> 
+        filtered = String.myers_difference(line, x) 
+        length(filtered) == 4 
+    end)
+  end
+
+  def output_difference({line1, line2}), do: MapSet.difference(line1, line2) |> MapSet.to_list
+
   def calculate(%{accu_twice: counted_twice, accu_thrice: counted_thrice}) do
     counted_thrice * counted_twice
   end
 
-  #assumes u cant have more than 3 occurences
   def scan_string(string, accu) do
-    #count the string
     scanned = String.graphemes(string) 
     |> Enum.reduce(%{once: [], twice: [], thrice: []}, 
     fn char, %{once: once_map, twice: twice_map, thrice: thrice_map} -> 
