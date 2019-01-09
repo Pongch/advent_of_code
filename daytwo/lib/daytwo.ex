@@ -33,7 +33,6 @@ defmodule Daytwo do
     end)
   end
 
-  def output_difference({line1, line2}), do: MapSet.difference(line1, line2) |> MapSet.to_list
 
   def calculate(%{accu_twice: counted_twice, accu_thrice: counted_thrice}) do
     counted_thrice * counted_twice
