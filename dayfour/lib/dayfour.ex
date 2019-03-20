@@ -1,31 +1,59 @@
 defmodule Dayfour do
   @moduledoc """
   Documentation for Dayfour.
-
-  [{guard_no: int, total_sleep, sleep_minutes:[1,2,3,4...]},... ]
-
-  [1518-11-01 00:55] wakes up
-  [1518-11-01 23:58] Guard #99 begins shift
-  [1518-11-02 00:40] falls asleep
-
-  status: :begin_sleeps, :wakes_up
-
-  (previousstate, currentstate) 
-  if begin_sleeps -> wakes_up, do add_sleep_minutes_and_total_sleeps_to_guard_id
-  elseif wakes_up -> begins_sleep do nil
-
-  must sort data by date first
   """
 
   import SleepState
 
-  def guard_id_time_minutes() do
-    File.stream!("sleep_1.txt") 
+  #TODO sort
+  def part_one(file) do
+    File.stream!(file) 
     |> Enum.map(&String.trim/1) 
-    |> Enum.map(&Dayfour.line_output/1)
+    |> sort_date()
+    |> Enum.map(&line_output/1)
     |> Dayfour.compute_sleeps()
+    |> Dayfour.total()
   end
 
+  # takes list of strings
+  defp sort_date(file) do
+    file
+    |> Enum.map(fn string -> 
+      {string, get_index(string)}
+    end)
+    |> Enum.sort_by(fn {_, [month, day, hour, min]} -> {month, day, hour, min} end)
+    |> Enum.map(fn {string, _} -> string end)
+  end
+
+  def get_index(string) do
+    [_, month, day, hour, min, _] = String.split(string, ["[1518-", "-", " " ,":" ,"]"], parts: 6) 
+    [month, day, hour, min] |> Enum.map(&(String.to_integer(&1)))
+  end
+
+  defp id_times_min({id, min, mins}) do
+    [key] = Dayfour.get_minute(mins)
+    String.to_integer(key) * id
+  end
+
+  def get_minute(mins) do
+    gb = Enum.group_by(mins, &(&1))
+    max = Enum.map(gb, fn {_,val} -> length(val) end) |> Enum.max
+    for {key,val} <- gb, length(val)==max, do: key
+  end
+
+  def total(state) do
+    state
+    |> Map.to_list()
+    |> Enum.reduce({0, 0, []}, fn {id, {val, mins}}, {total_id, total_val, total_mins} -> 
+      cond do
+        total_val < val -> 
+          {id, val, mins}
+        true ->
+          {total_id, total_val, total_mins}
+      end
+    end)
+    |> id_times_min()
+  end
 
   #reduce the {current_guard_id},{begin_sleep_min, wake_min},[guard_id:{ total_sleep, [sleepMinutes]}] 
   #lets use Genserver/Agent
@@ -33,10 +61,11 @@ defmodule Dayfour do
   def compute_sleeps(sleeps) do
     {_, pid} = SleepState.start_sleeps()
 
-    Enum.reduce(sleeps, {"","",""}, fn {action, value}, {current_guard, sleep_start_min, sleep_stop_min} -> 
+    Enum.reduce(sleeps, {nil, nil, nil}, fn {action, value}, {current_guard, sleep_start_min, sleep_stop_min} -> 
       case action do
-        :new_guard -> 
-          {value, "", ""}
+        :new_guard ->
+          # resets 
+          {value, nil, nil}
         :begin_sleeps -> 
           {current_guard, value, sleep_stop_min}
         :begin_wakes -> 

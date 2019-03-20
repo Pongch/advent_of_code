@@ -13,6 +13,14 @@ defmodule DayfourTest do
   end
 
   test "should return status, and minute" do
-    assert Dayfour.line_output("[1518-11-03 00:05] Guard #10 begins shift") == {:new_guard,10, 5}
+    assert Dayfour.line_output("[1518-11-03 00:05] Guard #10 begins shift") == {:new_guard,10}
+  end 
+
+  test "should return the answer for small sample" do
+    assert Dayfour.part_one("sleep_1.txt") == 240
+  end 
+
+  test "should return the answer for real sample" do
+    assert Dayfour.part_one("sleep_2.txt") == 39698
   end 
 end
