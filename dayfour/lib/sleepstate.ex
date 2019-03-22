@@ -19,11 +19,8 @@ defmodule SleepState do
     |> Enum.map(fn x -> Integer.to_string(x) end)
   end
 
-  #TODO compute the sleeps
   def update_guard_sleeps(pid, current_guard, sleep_start_min, sleep_end_min) do
-    # get current state of guard_id key
     current_state = get_state(pid)
-    # update (or create) new total_sleep value in integer and sleep minutes in a list
     case Map.has_key?(current_state, current_guard)  do
       true -> 
         {_, new_state} = Map.get_and_update!(current_state, current_guard, fn {value, sleep_mins} ->
@@ -47,7 +44,4 @@ defmodule SleepState do
         Agent.update(pid, fn _ -> new_state end)
     end
   end 
-
-  
-
 end

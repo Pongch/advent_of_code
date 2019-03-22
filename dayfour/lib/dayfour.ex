@@ -1,11 +1,6 @@
 defmodule Dayfour do
-  @moduledoc """
-  Documentation for Dayfour.
-  """
-
   import SleepState
 
-  #TODO sort
   def part_one(file) do
     File.stream!(file) 
     |> Enum.map(&String.trim/1) 
@@ -14,6 +9,52 @@ defmodule Dayfour do
     |> Dayfour.compute_sleeps()
     |> Dayfour.total()
   end
+
+  def part_two(file) do
+    File.stream!(file)
+    |> Enum.map(&String.trim/1) 
+    |> sort_date()
+    |> Enum.map(&line_output/1)
+    |> Dayfour.compute_sleeps()
+    |> Dayfour.count_sleep_mins()
+  end
+
+  def count_sleep_mins(sleep_map) do
+    {guard_id, min, _} = sleep_map
+    |> Map.to_list()
+    |> Enum.map(&do_count_sleep_mins/1)
+    |> Enum.map(&get_most_sleep_mins/1)
+    |> Enum.reduce({nil, 0, 0}, fn [guard_id, {sleep_min, sleep_count}], {biggest_guard, biggest_min, biggest_count} -> 
+      cond do
+        sleep_count > biggest_count ->
+          {guard_id, sleep_min, sleep_count}
+        true ->
+          {biggest_guard, biggest_min, biggest_count}
+      end
+    end)
+    guard_id * String.to_integer(min)
+  end
+
+  def get_most_sleep_mins([guard_id, mins]) do    
+    res = Enum.reduce(mins, {"nil", 0}, fn {min, count}, {biggest_min, biggest_count}-> 
+      cond do
+        count > biggest_count ->
+          {min, count}
+        true ->
+          {biggest_min, biggest_count}
+      end
+    end)
+    [guard_id, res]
+  end
+
+  def do_count_sleep_mins({guard_id, {total_sleep, sleepmins}}) do
+    sleep_counts = sleepmins
+    |> Enum.uniq()
+    |> Enum.map(fn min -> 
+      {min, Enum.count(sleepmins, fn x -> x == min end)}
+    end)
+    [guard_id, sleep_counts]
+  end 
 
   # takes list of strings
   defp sort_date(file) do
@@ -55,9 +96,6 @@ defmodule Dayfour do
     |> id_times_min()
   end
 
-  #reduce the {current_guard_id},{begin_sleep_min, wake_min},[guard_id:{ total_sleep, [sleepMinutes]}] 
-  #lets use Genserver/Agent
-  #at wake-> push the sleep minutes and total_sleep into the reduce tuple
   def compute_sleeps(sleeps) do
     {_, pid} = SleepState.start_sleeps()
 
@@ -73,10 +111,8 @@ defmodule Dayfour do
           {current_guard, sleep_start_min, value}
       end
     end)
-    SleepState.get_state(pid) |> IO.inspect
+    SleepState.get_state(pid) 
   end
-
-  #finds the guard and return the guard_id * most recurring minute
 
   @spec line_output(charlist) :: tuple
   def line_output(string) do

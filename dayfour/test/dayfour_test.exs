@@ -23,4 +23,12 @@ defmodule DayfourTest do
   test "should return the answer for real sample" do
     assert Dayfour.part_one("sleep_2.txt") == 39698
   end 
+
+  test "should return the answer for small sample (part two)" do
+    assert Dayfour.part_two("sleep_1.txt") == 4455
+  end
+
+  test "should return the answer for real sample (part two)" do
+    assert Dayfour.part_two("sleep_2.txt") == 14920
+  end
 end
