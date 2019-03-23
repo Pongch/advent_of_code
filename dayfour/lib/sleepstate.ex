@@ -6,13 +6,9 @@ defmodule SleepState do
     {:ok, agent} = Agent.start_link fn -> %{} end
   end 
 
-  def get_state(pid) do
-    Agent.get(pid, &(&1))
-  end
+  def get_state(pid), do: Agent.get(pid, &(&1))
 
-  def calculate_sleep(total_min, sleep_start_min, sleep_end_min) do
-    total_min + (sleep_end_min - sleep_start_min)
-  end
+  def calculate_sleep(total_min, sleep_start_min, sleep_end_min), do: total_min + (sleep_end_min - sleep_start_min)
 
   def return_sleep_mins(sleep_start_min, sleep_end_min) do 
     sleep_start_min..sleep_end_min 

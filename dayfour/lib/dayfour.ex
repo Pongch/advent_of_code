@@ -1,25 +1,19 @@
 defmodule Dayfour do
   import SleepState
 
-  def part_one(file) do
-    File.stream!(file) 
-    |> Enum.map(&String.trim/1) 
-    |> sort_date()
-    |> Enum.map(&line_output/1)
-    |> Dayfour.compute_sleeps()
-    |> Dayfour.total()
-  end
+  def part_one(file), do: get_sleep(file)|> Dayfour.run_part_one()
 
-  def part_two(file) do
+  def part_two(file), do: get_sleep(file) |> Dayfour.run_part_two()
+
+  def get_sleep(file) do
     File.stream!(file)
     |> Enum.map(&String.trim/1) 
     |> sort_date()
     |> Enum.map(&line_output/1)
     |> Dayfour.compute_sleeps()
-    |> Dayfour.count_sleep_mins()
-  end
+  end 
 
-  def count_sleep_mins(sleep_map) do
+  def run_part_two(sleep_map) do
     {guard_id, min, _} = sleep_map
     |> Map.to_list()
     |> Enum.map(&do_count_sleep_mins/1)
@@ -47,7 +41,7 @@ defmodule Dayfour do
     [guard_id, res]
   end
 
-  def do_count_sleep_mins({guard_id, {total_sleep, sleepmins}}) do
+  def do_count_sleep_mins({guard_id, {_, sleepmins}}) do
     sleep_counts = sleepmins
     |> Enum.uniq()
     |> Enum.map(fn min -> 
@@ -82,7 +76,8 @@ defmodule Dayfour do
     for {key,val} <- gb, length(val)==max, do: key
   end
 
-  def total(state) do
+  @spec run_part_one(map) :: integer
+  def run_part_one(state) do
     state
     |> Map.to_list()
     |> Enum.reduce({0, 0, []}, fn {id, {val, mins}}, {total_id, total_val, total_mins} -> 
@@ -96,6 +91,7 @@ defmodule Dayfour do
     |> id_times_min()
   end
 
+  @spec compute_sleeps(list) :: map
   def compute_sleeps(sleeps) do
     {_, pid} = SleepState.start_sleeps()
 
