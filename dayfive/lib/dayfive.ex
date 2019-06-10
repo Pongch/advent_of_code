@@ -12,20 +12,28 @@ defmodule Dayfive do
   def part_one(file) do
     parse(file)
     |> run_loop
+    |> Enum.count()
   end
 
   # running scanning and reacting the polymer until no
   def run_loop({:ok, list}) do
     scan(list) |> react() |> run_loop()
   end
+
+  def run_loop({:ok, :done, list}), do: list 
   
   def run_loop(list) do
     scan(list) |> react() |> run_loop()
   end
 
+  def check_result({first_match, index}), do: {first_match, index}
+
+  def check_result({_,_,_}), do: {[], nil} 
+
   # start going through list from head, returns the first valid match and the current list
   def scan(res) do
-    {first_match, index} = Enum.reduce_while(res, {nil, nil, 0}, fn value, {last_value, last_valid_polymers, index} = acc -> 
+    scanned_result = Enum.reduce_while(res, {nil, nil, 0}, fn value, {last_value, last_valid_polymers, index} = acc -> 
+      
       case valid_polymer_pair(value, acc) do
         #if last_value is still nil, do nothing- sets last value to current
         {:error, :nil_val} -> {:cont, {value, last_valid_polymers, index + 1}}
@@ -35,10 +43,11 @@ defmodule Dayfive do
         {:ok} -> {:halt, {[last_value, value], index - 1}}
       end
     end)
+    {first_match, index} = check_result(scanned_result)
     #returns res and first polymer_match
     {res, length(first_match), index}
   end
-  
+
   def valid_polymer_pair(unit1, {nil, nil, 0}), do: {:error, :nil_val}
 
   # validate first pair
@@ -52,8 +61,9 @@ defmodule Dayfive do
     end
   end
 
+  def react({list, 0, nil}), do: {:ok, :done, list}
+
   def react({list, 0, index}) do
-   IO.inspect(list)
    {:ok, list} 
   end
 
@@ -61,17 +71,6 @@ defmodule Dayfive do
     new_list = List.delete_at(list, index)
     react({new_list, units - 1, index})
   end
-
-  # # validate already matched pair with next value
-  # def valid_polymer_pair(unit_1, {unit_2, prev_match, _}) do
-  #   <<val1::utf8>> = unit_1
-  #   <<val2::utf8>> = unit_2
-  #   case val1 - val2 do 
-  #     32 -> {:ok, :keep_going}
-  #     - 32 -> {:ok, :keep_going}
-  #     _ -> {:ok, :stop} # done, the prev match is last valid match
-  #   end
-  # end
 
   # returns a list of graphemes
   def parse(file) do
