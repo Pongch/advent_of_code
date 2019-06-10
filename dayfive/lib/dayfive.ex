@@ -9,20 +9,19 @@ defmodule Dayfive do
     1.4/ if no more pair in list- return the final list
   """
 
-  def react(file) do
+  def part_one(file) do
     parse(file)
-    |> do_scan()
+    |> scan()
+    |> react()
   end
 
-
-  def run_loop(res) do
-    #do_scan
-    #react_polymer, repeats
-  end 
+  # running scanning and reacting the polymer until no
+  def run_loop() do
+  end
 
   # start going through list from head, returns the first valid match and the current list
-  def do_scan(res) do
-    first_match = Enum.reduce_while(res, {nil, nil, 0}, fn value, {last_value, last_valid_polymers, index} = acc -> 
+  def scan(res) do
+    {first_match, index} = Enum.reduce_while(res, {nil, nil, 0}, fn value, {last_value, last_valid_polymers, index} = acc -> 
       case valid_polymer_pair(value, acc) do
         #if last_value is still nil, do nothing- sets last value to current
         {:error, :nil_val} -> {:cont, {value, last_valid_polymers, index + 1}}
@@ -35,7 +34,14 @@ defmodule Dayfive do
       end
     end)
     #returns res and first polymer_match
-    first_match
+    {res, length(first_match), index}
+  end
+
+  def react({list, 0, index}), do: {:ok, list} 
+
+  def react({list, units, index}) do
+    new_list = List.delete_at(list, index)
+    react({new_list, units - 1, index - 1})
   end
   
 
